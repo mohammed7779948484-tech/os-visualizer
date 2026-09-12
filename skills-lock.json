@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "skills": {
+    "21st-cli-use": {
+      "source": "21st-dev/skill",
+      "sourceType": "github",
+      "skillPath": "skills/21st-cli-use/SKILL.md",
+      "computedHash": "ef2e2f0516771e0a0d2b68a0bc67d553a82f8a1bcfb422c264b1f91ce7852767"
+    },
+    "21st-ui-build": {
+      "source": "21st-dev/skill",
+      "sourceType": "github",
+      "skillPath": "skills/21st-ui-build/SKILL.md",
+      "computedHash": "7a038c5e51623312640b591688dad2c578d90a8a344137c1a05e599b1491bf90"
+    },
+    "21st-ui-explore": {
+      "source": "21st-dev/skill",
+      "sourceType": "github",
+      "skillPath": "skills/21st-ui-explore/SKILL.md",
+      "computedHash": "abd634b3cf3fc9b0b96bdb37357da4d16ae3b509589f75be5a70290927b61c1c"
+    },
+    "21st-ui-review": {
+      "source": "21st-dev/skill",
+      "sourceType": "github",
+      "skillPath": "skills/21st-ui-review/SKILL.md",
+      "computedHash": "ce7470a4777379716282b5a410a8a3211ac51a763786f6b81c3abcd282c220ab"
+    },
+    "animate": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/animate/SKILL.md",
+      "computedHash": "6e463bf11705d1929a4a398b108dfdd1e099bd9cbf4cfe031da08df97b929e37"
+    },
+    "emil-design-eng": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/emil-design-eng/SKILL.md",
+      "computedHash": "87067d79205fdedc6d682891027dd9c7335486c4b4dc2e785638941a9d2e6061"
+    },
+    "find-animation-opportunities": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/find-animation-opportunities/SKILL.md",
+      "computedHash": "c6b1d0f6d03a11f8772b1cef4ca5cc88301ae8641ac2697c85ffa87eb458e40a"
+    },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "106acf230014cbb43ca34e6410371321b56ca742f9ee0442e8ec05bf02eb0384"
+    },
+    "gsap-core": {
+      "source": "greensock/gsap-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-core/SKILL.md",
+      "computedHash": "b891c9ed42d9319685250231085ebe21538f2c844613b277b9dd2b3ff529a542"
+    },
+    "gsap-plugins": {
+      "source": "greensock/gsap-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-plugins/SKILL.md",
+      "computedHash": "50a320904c3053a1a7d01ea95235944814d18c0b5958f17e38046504aa6078a8"
+    },
+    "gsap-react": {
+      "source": "greensock/gsap-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-react/SKILL.md",
+      "computedHash": "255206fb6a4a079ad73b4a12e7c63197dc451a8549c7ac4e852b50ff74ef3bd6"
+    },
+    "gsap-timeline": {
+      "source": "greensock/gsap-skills",
+      "sourceType": "github",
+      "skillPath": "skills/gsap-timeline/SKILL.md",
+      "computedHash": "e7c07909bb427f74e1bda1ff716bd97ae166269382f7abbd649c0d1ba8f6e0ec"
+    },
+    "impeccable": {
+      "source": "pbakaus/impeccable",
+      "sourceType": "github",
+      "skillPath": ".agents/skills/impeccable/SKILL.md",
+      "computedHash": "439bb6cc56565d56e51825808b978468fb802d7ec9a593b8b045701b1569b6a6"
+    },
+    "magic-ui": {
+      "source": "magicuidesign/magicui",
+      "sourceType": "github",
+      "skillPath": "skills/magic-ui/SKILL.md",
+      "computedHash": "751895d50c76490c6f92a68cdbe61100bd96b4963d1e91e37b5d82c8df0fc2d7"
+    },
+    "react-vite-best-practices": {
+      "source": "asyrafhussin/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-vite-best-practices/SKILL.md",
+      "computedHash": "bfd0d0cef40fd678863adcc5bc96a27ffb9c5cece99f56894dc22e5f36f37c6b"
+    },
+    "review-animations": {
+      "source": "emilkowalski/skills",
+      "sourceType": "github",
+      "skillPath": "skills/review-animations/SKILL.md",
+      "computedHash": "6f8d633d7884c1390eff7af4bfaf7a450e798f117e1d49a555e00819dc877f64"
+    },
+    "shadcn": {
+      "source": "shadcn-ui/ui",
+      "sourceType": "github",
+      "skillPath": "skills/shadcn/SKILL.md",
+      "computedHash": "d04e43ec01e921558b93bb8046c14a42a22556689a2827243df900825a4e1604"
+    },
+    "tailwind-v4-shadcn": {
+      "source": "secondsky/claude-skills",
+      "sourceType": "github",
+      "skillPath": "plugins/tailwind-v4-shadcn/skills/tailwind-v4-shadcn/SKILL.md",
+      "computedHash": "43c497c796637b4fafff6f12f8aa4e90c9b39f34ebd5f6f8f087d40b7a0293e8"
+    },
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "3f1e66e08e3d1d3feaf2a3187705022812e0bece8ff5bee80fe7cf782f26fe8b"
+    },
+    "vercel-react-best-practices": {
+      "source": "vercel-labs/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/react-best-practices/SKILL.md",
+      "computedHash": "6b526d013e28073246a36f99b529bc43745d30832ecfa8217b359c34f260ca6b"
+    }
+  }
+}
