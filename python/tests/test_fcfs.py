@@ -1,83 +1,63 @@
-from __future__ import annotations
-
 import unittest
 
-from python.cpu.fcfs import fcfs
+from python.cpu.fcfs import FCFS
 
 
 class FCFSTests(unittest.TestCase):
-    def test_normal_sequence(self) -> None:
-        result = fcfs([
-            {"id": "P1", "arrival": 0, "burst": 4},
-            {"id": "P2", "arrival": 1, "burst": 3},
-            {"id": "P3", "arrival": 2, "burst": 2},
+    def test_professor_example(self):
+        result = FCFS([
+            {"P": 1, "AT": 0, "BT": 4},
+            {"P": 2, "AT": 1, "BT": 3},
+            {"P": 3, "AT": 3, "BT": 2},
         ])
 
-        self.assertEqual([item["finish"] for item in result["processes"]], [4, 7, 9])
-        self.assertEqual([item["waiting"] for item in result["processes"]], [0, 3, 5])
-        self.assertEqual(result["metrics"]["cpuIdleTime"], 0)
-        self.assertNotIn("events", result)
+        self.assertEqual([p["FT"] for p in result["processes"]], [4, 7, 9])
+        self.assertEqual([p["TAT"] for p in result["processes"]], [4, 6, 6])
+        self.assertEqual([p["WT"] for p in result["processes"]], [0, 3, 4])
+        self.assertEqual(result["average_TAT"], 5.333)
+        self.assertEqual(result["average_WT"], 2.333)
+        self.assertEqual(result["idle_time"], 0)
 
-    def test_same_arrival_preserves_input_order(self) -> None:
-        result = fcfs([
-            {"id": "P2", "arrival": 0, "burst": 2},
-            {"id": "P1", "arrival": 0, "burst": 1},
+    def test_same_arrival_preserves_input_order(self):
+        result = FCFS([
+            {"P": "P2", "AT": 0, "BT": 2},
+            {"P": "P1", "AT": 0, "BT": 1},
         ])
+        self.assertEqual([p["P"] for p in result["processes"]], ["P2", "P1"])
 
-        run_order = [segment["processId"] for segment in result["schedule"] if segment["kind"] == "run"]
-        self.assertEqual(run_order, ["P2", "P1"])
-
-    def test_cpu_idle_gap(self) -> None:
-        result = fcfs([
-            {"id": "P1", "arrival": 0, "burst": 4},
-            {"id": "P2", "arrival": 1, "burst": 3},
-            {"id": "P3", "arrival": 10, "burst": 2},
+    def test_cpu_idle_gap(self):
+        result = FCFS([
+            {"P": "P1", "AT": 0, "BT": 4},
+            {"P": "P2", "AT": 1, "BT": 3},
+            {"P": "P3", "AT": 10, "BT": 2},
         ])
 
         self.assertEqual(result["schedule"], [
-            {"kind": "run", "processId": "P1", "start": 0, "end": 4},
-            {"kind": "run", "processId": "P2", "start": 4, "end": 7},
-            {"kind": "idle", "processId": None, "start": 7, "end": 10},
-            {"kind": "run", "processId": "P3", "start": 10, "end": 12},
+            {"P": "P1", "start": 0, "end": 4},
+            {"P": "P2", "start": 4, "end": 7},
+            {"P": None, "start": 7, "end": 10},
+            {"P": "P3", "start": 10, "end": 12},
         ])
-        self.assertEqual(result["metrics"]["cpuIdleTime"], 3)
-        self.assertEqual([item["finish"] for item in result["processes"]], [4, 7, 12])
-        self.assertAlmostEqual(result["metrics"]["averageWaiting"], 1.0)
-        self.assertAlmostEqual(result["metrics"]["averageTurnaround"], 4.0)
+        self.assertEqual(result["idle_time"], 3)
+        self.assertEqual(result["total_time"], 12)
+        self.assertEqual([p["FT"] for p in result["processes"]], [4, 7, 12])
+        self.assertEqual(result["average_WT"], 1.0)
+        self.assertEqual(result["average_TAT"], 4.0)
 
-    def test_single_process_with_initial_idle_time(self) -> None:
-        result = fcfs([{"id": "P1", "arrival": 3, "burst": 5}])
+    def test_initial_idle_time(self):
+        result = FCFS([{"P": "P1", "AT": 3, "BT": 5}])
+        self.assertEqual(result["schedule"][0], {"P": None, "start": 0, "end": 3})
+        self.assertEqual(result["processes"][0]["FT"], 8)
+        self.assertEqual(result["processes"][0]["WT"], 0)
+        self.assertEqual(result["idle_time"], 3)
 
-        self.assertEqual(result["processes"][0]["finish"], 8)
-        self.assertEqual(result["processes"][0]["waiting"], 0)
-        self.assertEqual(result["metrics"]["cpuIdleTime"], 3)
-        self.assertEqual(result["schedule"][0], {"kind": "idle", "processId": None, "start": 0, "end": 3})
-
-    def test_result_order_matches_input_order(self) -> None:
-        result = fcfs([
-            {"id": "late", "arrival": 5, "burst": 1},
-            {"id": "early", "arrival": 0, "burst": 1},
+    def test_unsorted_input_is_scheduled_by_arrival(self):
+        result = FCFS([
+            {"P": "late", "AT": 5, "BT": 1},
+            {"P": "early", "AT": 0, "BT": 1},
         ])
-        self.assertEqual([process["id"] for process in result["processes"]], ["late", "early"])
-        self.assertEqual([segment["processId"] for segment in result["schedule"] if segment["kind"] == "run"], ["early", "late"])
-
-    def test_negative_arrival_is_invalid(self) -> None:
-        with self.assertRaises(ValueError):
-            fcfs([{"id": "P1", "arrival": -1, "burst": 2}])
-
-    def test_zero_or_negative_burst_is_invalid(self) -> None:
-        for burst in (0, -2):
-            with self.subTest(burst=burst), self.assertRaises(ValueError):
-                fcfs([{"id": "P1", "arrival": 0, "burst": burst}])
-
-    def test_duplicate_id_and_fractional_times_are_invalid(self) -> None:
-        with self.assertRaises(ValueError):
-            fcfs([
-                {"id": "P1", "arrival": 0, "burst": 2},
-                {"id": "P1", "arrival": 1, "burst": 1},
-            ])
-        with self.assertRaises(ValueError):
-            fcfs([{"id": "P1", "arrival": 1.5, "burst": 1}])
+        self.assertEqual([p["P"] for p in result["processes"]], ["early", "late"])
+        self.assertEqual([segment["P"] for segment in result["schedule"] if segment["P"]], ["early", "late"])
 
 
 if __name__ == "__main__":

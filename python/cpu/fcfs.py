@@ -1,111 +1,51 @@
-"""First-Come, First-Served (FCFS) CPU scheduling.
-
-FCFS is non-preemptive: once a process receives the CPU, it runs until its
-burst finishes. Equal arrival times preserve the original input order.
-"""
-
-from __future__ import annotations
-
-from typing import Any
+"""First-Come, First-Served (FCFS) CPU scheduling."""
 
 
-def _check_processes(processes: list[dict[str, Any]]) -> None:
-    """Check the academic input constraints expected by FCFS."""
+def FCFS(process):
+    """Run FCFS and return its academic results."""
 
-    if not isinstance(processes, list) or not processes:
-        raise ValueError("At least one process is required.")
+    process = sorted(process, key=lambda x: x["AT"])
 
-    seen_ids: set[str] = set()
-    for process in processes:
-        if not isinstance(process, dict):
-            raise ValueError("Each process must be an object.")
+    current = 0
+    total_TAT = 0
+    total_WT = 0
+    total_idle = 0
 
-        process_id = process.get("id")
-        arrival = process.get("arrival")
-        burst = process.get("burst")
+    results = []
+    schedule = []
 
-        if not isinstance(process_id, str) or not process_id.strip():
-            raise ValueError("Process ID must be a non-empty string.")
-        if process_id in seen_ids:
-            raise ValueError(f"Duplicate process ID: {process_id}.")
-        if isinstance(arrival, bool) or not isinstance(arrival, int) or arrival < 0:
-            raise ValueError("Arrival time must be an integer greater than or equal to 0.")
-        if isinstance(burst, bool) or not isinstance(burst, int) or burst <= 0:
-            raise ValueError("Burst time must be an integer greater than 0.")
+    for p in process:
+        if current < p["AT"]:
+            schedule.append({"P": None, "start": current, "end": p["AT"]})
+            total_idle += p["AT"] - current
+            current = p["AT"]
 
-        seen_ids.add(process_id)
+        start = current
+        current += p["BT"]
 
+        FT = current
+        TAT = FT - p["AT"]
+        WT = TAT - p["BT"]
 
-def fcfs(processes: list[dict[str, Any]]) -> dict[str, Any]:
-    """Schedule processes using non-preemptive First-Come, First-Served.
+        results.append({
+            "P": p["P"],
+            "AT": p["AT"],
+            "BT": p["BT"],
+            "FT": FT,
+            "TAT": TAT,
+            "WT": WT,
+        })
 
-    Processes are ordered by arrival time. If two processes arrive at the same
-    time, their original input order is preserved.
-    """
+        schedule.append({"P": p["P"], "start": start, "end": FT})
 
-    _check_processes(processes)
-
-    ordered = sorted(
-        enumerate(processes),
-        key=lambda item: (item[1]["arrival"], item[0]),
-    )
-
-    current_time = 0
-    total_idle_time = 0
-    schedule: list[dict[str, Any]] = []
-    results_by_index: dict[int, dict[str, Any]] = {}
-
-    for input_index, process in ordered:
-        process_id = process["id"]
-        arrival = process["arrival"]
-        burst = process["burst"]
-
-        if current_time < arrival:
-            schedule.append(
-                {
-                    "kind": "idle",
-                    "processId": None,
-                    "start": current_time,
-                    "end": arrival,
-                }
-            )
-            total_idle_time += arrival - current_time
-            current_time = arrival
-
-        start = current_time
-        finish = start + burst
-        turnaround = finish - arrival
-        waiting = turnaround - burst
-
-        schedule.append(
-            {
-                "kind": "run",
-                "processId": process_id,
-                "start": start,
-                "end": finish,
-            }
-        )
-        results_by_index[input_index] = {
-            "id": process_id,
-            "arrival": arrival,
-            "burst": burst,
-            "finish": finish,
-            "turnaround": turnaround,
-            "waiting": waiting,
-        }
-
-        current_time = finish
-
-    results = [results_by_index[index] for index in range(len(processes))]
+        total_TAT += TAT
+        total_WT += WT
 
     return {
-        "algorithm": "FCFS",
         "processes": results,
-        "metrics": {
-            "averageWaiting": sum(process["waiting"] for process in results) / len(results),
-            "averageTurnaround": sum(process["turnaround"] for process in results) / len(results),
-            "cpuIdleTime": total_idle_time,
-            "totalTime": current_time,
-        },
         "schedule": schedule,
+        "average_TAT": round(total_TAT / len(process), 3),
+        "average_WT": round(total_WT / len(process), 3),
+        "idle_time": total_idle,
+        "total_time": current,
     }

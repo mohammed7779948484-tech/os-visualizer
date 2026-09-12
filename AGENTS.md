@@ -149,6 +149,8 @@ Do not implement FCFS/SJF/SRTF/RR/First Fit/Best Fit/Worst Fit again in TypeScri
 
 Keep each Python algorithm independently readable and testable. A professor should be able to open one algorithm file and follow the algorithm without navigating UI/event infrastructure. Prefer straightforward academic implementations over elaborate abstractions.
 
+For Python algorithm files, prefer the course notation used in class (`P`, `AT`, `BT`, `FT`, `TAT`, `WT`) and simple function bodies close to the taught pseudocode. Avoid `typing.Any`, generic typing machinery, transport-schema names, and unnecessary abstractions inside algorithm files. Put JSON/frontend naming conversion and request validation in `python/runner.py`.
+
 Do not introduce FastAPI, Flask, a database, or a separate backend unless explicitly requested.
 
 ## Academic Requirements
