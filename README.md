@@ -8,32 +8,54 @@ The project deliberately separates the academic algorithms from the presentation
 Python algorithm → JSON result → local Vite/Node bridge → React visualization
 ```
 
-## Current status
+## Python algorithm layer
 
-Implemented end-to-end:
+Implemented and tested:
+
+### CPU Scheduling
+- **FCFS** — `python/cpu/fcfs.py`
+- **SJF (Non-Preemptive)** — `python/cpu/sjf.py`
+- **SRTF (Preemptive SJF)** — `python/cpu/srtf.py`
+- **Round Robin** — `python/cpu/round_robin.py`
+
+All CPU algorithms return the same academic result shape: per-process AT / BT / FT / TAT / WT, Average WT, Average TAT, CPU idle time, total time, and the execution schedule. RR additionally uses a positive Time Quantum.
+
+### Memory Allocation
+- **First Fit** — `python/memory/first_fit.py`
+- **Best Fit** — `python/memory/best_fit.py`
+- **Worst Fit** — `python/memory/worst_fit.py`
+
+The memory algorithms follow the reference implementation used for this course: after an allocation, the remaining space in a block can be reused by later processes.
+
+### Dispatchers
+- `python/cpu/engine.py` selects a CPU algorithm.
+- `python/memory/engine.py` selects a memory-allocation algorithm.
+- `python/runner.py` validates JSON input, converts the frontend contract to course notation, invokes the selected algorithm, and serializes the direct result.
+
+Algorithm logic does **not** live in `runner.py`, TypeScript, or the Vite bridge.
+
+## Frontend integration status
+
+Currently integrated end-to-end in the React visualizer:
 - **FCFS** CPU Scheduling in Python.
 - AT / BT / FT / TAT / WT.
 - Average WT and Average TAT.
 - CPU idle-time calculation and idle schedule segments.
 - Arabic RTL visualization with Ready Queue, CPU state, Gantt schedule, metrics, results, event log, and playback controls.
 
-Not yet implemented in Python:
-- SJF
-- SRTF (the UI currently contains a clearly-labelled prerecorded teaching scene only)
-- Round Robin
-- Memory Allocation algorithms
+The Python layer already contains SJF, SRTF, RR, First Fit, Best Fit, and Worst Fit. Their dedicated frontend visual playback is intentionally deferred to the next UI integration passes. The existing SRTF screen is still a clearly-labelled prerecorded teaching scene until it is switched to the real SRTF result contract.
 
 ## Architecture boundary
 
 ### Python
 
-`python/cpu/*.py` and later `python/memory/*.py` contain only the academic algorithms and their direct outputs.
+`python/cpu/*.py` and `python/memory/*.py` contain only the academic algorithms and their direct computational outputs.
 
-Python does **not** produce UI events, animation frames, localized text, or React state.
+Python does **not** produce UI animation frames, localized UI copy, React state, or Motion/GSAP instructions.
 
 ### Frontend
 
-React/TypeScript receives the schedule already decided by Python and derives presentation-only playback events from it. The frontend may visualize a decision but must not make the scheduling decision itself.
+React/TypeScript receives scheduling/allocation facts already decided by Python and may derive presentation-only playback state from them. The frontend may visualize a decision but must not make the algorithmic decision itself.
 
 ### Bridge
 
@@ -64,26 +86,29 @@ The browser calls `/api/simulate`; therefore the application should be run throu
 python -m unittest discover -s python/tests -v
 ```
 
-You can also test the runner through stdin/stdout:
+### CPU request example
 
 ```bash
 python python/runner.py
 ```
 
-Example request:
+```json
+{"algorithm":"SRTF","processes":[{"id":"P1","arrival":0,"burst":7},{"id":"P2","arrival":2,"burst":4},{"id":"P3","arrival":4,"burst":1}]}
+```
+
+For Round Robin add a positive quantum:
 
 ```json
-{"algorithm":"FCFS","processes":[{"id":"P1","arrival":0,"burst":4},{"id":"P2","arrival":1,"burst":3},{"id":"P3","arrival":10,"burst":2}]}
+{"algorithm":"RR","quantum":2,"processes":[{"id":"P1","arrival":0,"burst":7},{"id":"P2","arrival":2,"burst":4}]}
 ```
 
-Expected execution schedule:
+### Memory request example
 
-```text
-P1    0 → 4
-P2    4 → 7
-IDLE  7 → 10
-P3   10 → 12
+```json
+{"module":"memory","algorithm":"BEST_FIT","blocks":[100,500,200,300,600],"processes":[{"id":"P1","size":212},{"id":"P2","size":417}]}
 ```
+
+Accepted memory algorithm names are `FIRST_FIT`, `BEST_FIT`, and `WORST_FIT`; spaces such as `Best Fit` are normalized by the runner.
 
 ## Quality checks
 

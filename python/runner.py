@@ -3,10 +3,11 @@
 import json
 import sys
 
-from cpu.fcfs import FCFS
+from cpu.engine import CPUEngine
+from memory.engine import MemoryEngine
 
 
-def prepare_processes(processes):
+def prepare_cpu_processes(processes):
     if not isinstance(processes, list) or not processes:
         raise ValueError("At least one process is required.")
 
@@ -36,11 +37,58 @@ def prepare_processes(processes):
     return prepared
 
 
-def format_fcfs_result(academic_result, original_processes):
-    result_by_id = {
-        item["P"]: item
-        for item in academic_result["processes"]
-    }
+def prepare_quantum(algorithm, quantum):
+    if algorithm != "RR":
+        return None
+
+    if isinstance(quantum, bool) or not isinstance(quantum, int) or quantum <= 0:
+        raise ValueError("Time quantum must be an integer greater than 0.")
+
+    return quantum
+
+
+def prepare_memory_blocks(blocks):
+    if not isinstance(blocks, list) or not blocks:
+        raise ValueError("At least one memory block is required.")
+
+    prepared = []
+    for block in blocks:
+        if isinstance(block, bool) or not isinstance(block, int) or block <= 0:
+            raise ValueError("Memory block sizes must be integers greater than 0.")
+        prepared.append(block)
+
+    return prepared
+
+
+def prepare_memory_processes(processes):
+    if not isinstance(processes, list) or not processes:
+        raise ValueError("At least one memory process is required.")
+
+    seen_ids = set()
+    prepared = []
+
+    for process in processes:
+        if not isinstance(process, dict):
+            raise ValueError("Each memory process must be an object.")
+
+        process_id = process.get("id")
+        size = process.get("size")
+
+        if not isinstance(process_id, str) or not process_id.strip():
+            raise ValueError("Process ID must be a non-empty string.")
+        if process_id in seen_ids:
+            raise ValueError(f"Duplicate process ID: {process_id}.")
+        if isinstance(size, bool) or not isinstance(size, int) or size <= 0:
+            raise ValueError("Process size must be an integer greater than 0.")
+
+        seen_ids.add(process_id)
+        prepared.append({"id": process_id, "size": size})
+
+    return prepared
+
+
+def format_cpu_result(algorithm, academic_result, original_processes):
+    result_by_id = {item["P"]: item for item in academic_result["processes"]}
 
     processes = []
     for original in original_processes:
@@ -63,8 +111,8 @@ def format_fcfs_result(academic_result, original_processes):
             "end": segment["end"],
         })
 
-    return {
-        "algorithm": "FCFS",
+    result = {
+        "algorithm": algorithm,
         "processes": processes,
         "metrics": {
             "averageWaiting": academic_result["average_WT"],
@@ -75,6 +123,92 @@ def format_fcfs_result(academic_result, original_processes):
         "schedule": schedule,
     }
 
+    if algorithm == "RR":
+        result["quantum"] = academic_result["quantum"]
+
+    return result
+
+
+def normalize_memory_algorithm(algorithm):
+    if not isinstance(algorithm, str):
+        return algorithm
+    return algorithm.strip().replace("-", "_").replace(" ", "_").upper()
+
+
+def format_memory_result(algorithm, academic_result):
+    allocations = []
+    for item in academic_result["allocations"]:
+        allocations.append({
+            "id": item["pid"],
+            "size": item["process_size"],
+            "block": None if item["block"] == "-" else item["block"],
+            "blockSize": None if item["block_size"] == "-" else item["block_size"],
+            "remaining": None if item["free_space"] == "-" else item["free_space"],
+            "status": item["status"],
+        })
+
+    return {
+        "module": "memory",
+        "algorithm": algorithm,
+        "allocations": allocations,
+        "remainingBlocks": academic_result["remaining_blocks"],
+    }
+
+
+def run_cpu_request(request):
+    algorithm = request.get("algorithm")
+    if isinstance(algorithm, str):
+        algorithm = algorithm.strip().upper()
+
+    if algorithm not in CPUEngine.ALGORITHMS:
+        return {
+            "ok": False,
+            "error": {
+                "code": "UNSUPPORTED_ALGORITHM",
+                "message": f"CPU algorithm {algorithm!r} is not implemented.",
+            },
+        }
+
+    try:
+        original_processes = request.get("processes")
+        academic_processes = prepare_cpu_processes(original_processes)
+        quantum = prepare_quantum(algorithm, request.get("quantum"))
+        academic_result = CPUEngine.run(algorithm, academic_processes, quantum)
+        result = format_cpu_result(algorithm, academic_result, original_processes)
+    except (KeyError, TypeError, ValueError) as error:
+        return {
+            "ok": False,
+            "error": {"code": "VALIDATION_ERROR", "message": str(error)},
+        }
+
+    return {"ok": True, "result": result}
+
+
+def run_memory_request(request):
+    algorithm = normalize_memory_algorithm(request.get("algorithm"))
+
+    if algorithm not in MemoryEngine.ALGORITHMS:
+        return {
+            "ok": False,
+            "error": {
+                "code": "UNSUPPORTED_ALGORITHM",
+                "message": f"Memory algorithm {algorithm!r} is not implemented.",
+            },
+        }
+
+    try:
+        blocks = prepare_memory_blocks(request.get("blocks"))
+        processes = prepare_memory_processes(request.get("processes"))
+        academic_result = MemoryEngine.run(algorithm, blocks, processes)
+        result = format_memory_result(algorithm, academic_result)
+    except (KeyError, TypeError, ValueError) as error:
+        return {
+            "ok": False,
+            "error": {"code": "VALIDATION_ERROR", "message": str(error)},
+        }
+
+    return {"ok": True, "result": result}
+
 
 def run_request(request):
     if not isinstance(request, dict):
@@ -83,28 +217,19 @@ def run_request(request):
             "error": {"code": "INVALID_REQUEST", "message": "The request must be a JSON object."},
         }
 
-    algorithm = request.get("algorithm")
-    if algorithm != "FCFS":
-        return {
-            "ok": False,
-            "error": {
-                "code": "UNSUPPORTED_ALGORITHM",
-                "message": f"Algorithm {algorithm!r} is not implemented in Python yet.",
-            },
-        }
+    module = request.get("module", "cpu")
+    if isinstance(module, str):
+        module = module.strip().lower()
 
-    try:
-        original_processes = request.get("processes")
-        academic_processes = prepare_processes(original_processes)
-        academic_result = FCFS(academic_processes)
-        result = format_fcfs_result(academic_result, original_processes)
-    except (KeyError, TypeError, ValueError) as error:
-        return {
-            "ok": False,
-            "error": {"code": "VALIDATION_ERROR", "message": str(error)},
-        }
+    if module == "cpu":
+        return run_cpu_request(request)
+    if module == "memory":
+        return run_memory_request(request)
 
-    return {"ok": True, "result": result}
+    return {
+        "ok": False,
+        "error": {"code": "UNSUPPORTED_MODULE", "message": f"Module {module!r} is not supported."},
+    }
 
 
 def main():
