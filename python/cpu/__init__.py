@@ -1,5 +1,5 @@
 """CPU scheduling algorithms."""
 
-from .fcfs import FCFSValidationError, schedule_fcfs
+from .fcfs import fcfs
 
-__all__ = ["FCFSValidationError", "schedule_fcfs"]
+__all__ = ["fcfs"]

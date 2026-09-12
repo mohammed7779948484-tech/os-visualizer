@@ -1,4 +1,4 @@
-"""JSON stdin/stdout adapter for the simulator's Python algorithms."""
+"""Small JSON stdin/stdout adapter for the simulator's Python algorithms."""
 
 from __future__ import annotations
 
@@ -6,10 +6,12 @@ import json
 import sys
 from typing import Any
 
-from cpu.fcfs import FCFSValidationError, schedule_fcfs
+from cpu.fcfs import fcfs
 
 
 def run_request(request: Any) -> dict[str, Any]:
+    """Dispatch one transport request without adding scheduling logic."""
+
     if not isinstance(request, dict):
         return {
             "ok": False,
@@ -27,24 +29,19 @@ def run_request(request: Any) -> dict[str, Any]:
         }
 
     try:
-        result = schedule_fcfs(request.get("processes"))
-    except FCFSValidationError as error:
+        result = fcfs(request.get("processes"))
+    except (KeyError, TypeError, ValueError) as error:
         return {
             "ok": False,
-            "error": {
-                "code": "VALIDATION_ERROR",
-                "message": str(error),
-                "details": error.details,
-            },
+            "error": {"code": "VALIDATION_ERROR", "message": str(error)},
         }
 
     return {"ok": True, "result": result}
 
 
 def main() -> int:
-    raw_input = sys.stdin.read()
     try:
-        request = json.loads(raw_input)
+        request = json.loads(sys.stdin.read())
     except json.JSONDecodeError as error:
         response = {
             "ok": False,

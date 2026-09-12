@@ -22,7 +22,7 @@ def invoke_runner(raw_input: str) -> tuple[int, dict[str, object]]:
 
 
 class RunnerTests(unittest.TestCase):
-    def test_fcfs_success_contract(self) -> None:
+    def test_fcfs_success_contract_is_algorithm_output_only(self) -> None:
         code, response = invoke_runner(json.dumps({
             "algorithm": "FCFS",
             "processes": [{"id": "P1", "arrival": 0, "burst": 2}],
@@ -32,32 +32,28 @@ class RunnerTests(unittest.TestCase):
         self.assertTrue(response["ok"])
         result = response["result"]
         self.assertEqual(result["algorithm"], "FCFS")
-        self.assertEqual(result["timeline"][0], {"kind": "run", "processId": "P1", "start": 0, "end": 2})
+        self.assertEqual(result["schedule"][0], {"kind": "run", "processId": "P1", "start": 0, "end": 2})
+        self.assertNotIn("events", result)
 
     def test_malformed_json_returns_structured_error(self) -> None:
         code, response = invoke_runner("{bad json")
-
         self.assertEqual(code, 1)
         self.assertFalse(response["ok"])
         self.assertEqual(response["error"]["code"], "INVALID_JSON")
 
     def test_unsupported_algorithm_returns_structured_error(self) -> None:
         code, response = invoke_runner(json.dumps({"algorithm": "SJF", "processes": []}))
-
         self.assertEqual(code, 1)
         self.assertFalse(response["ok"])
         self.assertEqual(response["error"]["code"], "UNSUPPORTED_ALGORITHM")
 
-    def test_validation_error_includes_field_details(self) -> None:
+    def test_invalid_academic_input_returns_validation_error(self) -> None:
         code, response = invoke_runner(json.dumps({
             "algorithm": "FCFS",
             "processes": [{"id": "P1", "arrival": -1, "burst": 0}],
         }))
-
         self.assertEqual(code, 1)
         self.assertEqual(response["error"]["code"], "VALIDATION_ERROR")
-        paths = {detail["path"] for detail in response["error"]["details"]}
-        self.assertEqual(paths, {"processes[0].arrival", "processes[0].burst"})
 
 
 if __name__ == "__main__":

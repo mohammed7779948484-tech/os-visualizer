@@ -54,7 +54,7 @@ export function CpuWorkspace(props: CpuWorkspaceProps) {
         <PlaybackControls canPlay={Boolean(props.result)} isPlaying={props.isPlaying} speed={props.speed} onPlay={props.onPlay} onPause={props.onPause} onStep={props.onStep} onReset={props.onReset} onSpeedChange={props.onSpeedChange} />
       </div>
       <SchedulerStage processes={props.processes} event={props.event} progressTarget={props.progressTarget} highlightedProcess={props.highlightedProcess} selectedProcess={props.selectedProcess} onFocus={props.onFocus} onSelect={props.onSelect} />
-      <ExecutionTimeline timeline={props.result?.timeline ?? []} event={props.event} highlightedProcess={props.highlightedProcess} selectedProcess={props.selectedProcess} isPlaying={props.isPlaying} isComplete={props.isComplete} onFocus={props.onFocus} onSelect={props.onSelect} />
+      <ExecutionTimeline schedule={props.result?.schedule ?? []} event={props.event} highlightedProcess={props.highlightedProcess} selectedProcess={props.selectedProcess} isPlaying={props.isPlaying} isComplete={props.isComplete} onFocus={props.onFocus} onSelect={props.onSelect} />
       <MetricsStrip result={props.result} />
       {!props.result && <div className="workspace-standby"><Binary /><span>أدخل العمليات ثم شغّل FCFS لبناء مسار التنفيذ.</span></div>}
     </section>

@@ -12,11 +12,24 @@ export type ProcessResult = ProcessInput & {
   waiting: number
 }
 
-export type TimelineSegment = {
+export type ScheduleSegment = {
   kind: "run" | "idle"
   processId: string | null
   start: number
   end: number
+}
+
+/** Direct facts returned by Python. No playback/UI state belongs here. */
+export type AlgorithmResult = {
+  algorithm: "FCFS"
+  processes: ProcessResult[]
+  metrics: {
+    averageWaiting: number
+    averageTurnaround: number
+    cpuIdleTime: number
+    totalTime: number
+  }
+  schedule: ScheduleSegment[]
 }
 
 export type RunningState = {
@@ -33,13 +46,13 @@ export type SimulationState = {
   running: RunningState | null
 }
 
+/** Frontend-only playback events derived from Python's already-decided schedule. */
 export type SimulationEventType =
   | "simulation_start"
   | "arrival"
   | "idle_start"
   | "idle_end"
   | "dispatch"
-  | "execute"
   | "complete"
   | "simulation_complete"
 
@@ -51,25 +64,15 @@ export type SimulationEvent = {
   processId?: string
   burst?: number
   until?: number
-  reason?: string
+  reason?: "python_schedule"
   finish?: number
   turnaround?: number
   waiting?: number
-  executed?: number
-  remaining?: number
   processCount?: number
 }
 
-export type SimulationResult = {
-  algorithm: "FCFS"
-  processes: ProcessResult[]
-  metrics: {
-    averageWaiting: number
-    averageTurnaround: number
-    cpuIdleTime: number
-    totalTime: number
-  }
-  timeline: TimelineSegment[]
+/** Frontend view model: direct Python facts plus frontend-derived playback events. */
+export type SimulationResult = AlgorithmResult & {
   events: SimulationEvent[]
 }
 
@@ -80,5 +83,5 @@ export type SimulationError = {
 }
 
 export type SimulationResponse =
-  | { ok: true; result: SimulationResult }
+  | { ok: true; result: AlgorithmResult }
   | { ok: false; error: SimulationError }

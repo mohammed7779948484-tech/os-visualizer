@@ -4,9 +4,10 @@ import { CpuWorkspace } from "./components/cpu-workspace"
 import { ProcessResults } from "./components/process-results"
 import { SchedulerLog } from "./components/scheduler-log"
 import { SimulationConfig } from "./components/simulation-config"
+import { useSimulationPlayback } from "./hooks/use-simulation-playback"
 import { SimulationRequestError, requestSimulation } from "./lib/simulation-client"
 import { translatePythonError } from "./lib/simulation-copy"
-import { useSimulationPlayback } from "./hooks/use-simulation-playback"
+import { validateProcessInputs } from "./lib/validate-processes"
 import type { Algorithm, ProcessInput, SimulationError, SimulationResult } from "./types"
 
 const initialProcesses: ProcessInput[] = [
@@ -73,6 +74,14 @@ export function CpuSchedulingPage() {
 
   const runSimulation = async () => {
     abortPendingRequest()
+    const inputError = validateProcessInputs(processes)
+    if (inputError) {
+      setError(inputError)
+      setResult(null)
+      playback.clear()
+      return
+    }
+
     const controller = new AbortController()
     requestControllerRef.current = controller
     setIsLoading(true)
@@ -126,7 +135,7 @@ export function CpuSchedulingPage() {
           <p className="kicker"><span dir="ltr">LAB 01</span> جدولة المعالج</p>
           <h1>راقب قرار المجدول، لا نتيجته فقط.</h1>
         </div>
-        <p className="intro-copy">تدخل العمليات من هنا، يحسبها بايثون فورًا، ثم يعيد المختبر تشغيل الوصول والإرسال والخمول والاكتمال كمسار زمني قابل للفحص.</p>
+        <p className="intro-copy">تدخل العمليات من هنا، يحسبها بايثون فورًا، ثم تحول الواجهة جدول التنفيذ الناتج إلى وصول وإرسال وخمول واكتمال قابل للفحص بصريًا.</p>
       </section>
 
       <div className="workspace" id="workspace">
@@ -136,7 +145,7 @@ export function CpuSchedulingPage() {
       </div>
 
       <ProcessResults result={result} completed={playback.event?.state.completed ?? []} highlightedProcess={highlightedProcess} onFocus={setFocusedProcess} />
-      <footer><span dir="ltr">Kernel Trace / CPU Lab</span><span>الحساب: بايثون · العرض: React</span><span dir="ltr">FCFS · Build 0.2</span></footer>
+      <footer><span dir="ltr">Kernel Trace / CPU Lab</span><span>الخوارزمية: بايثون · التشغيل البصري: React</span><span dir="ltr">FCFS · Build 0.3</span></footer>
     </main>
   )
 }

@@ -1,32 +1,98 @@
-# React + TypeScript + Vite
+# OS Visualizer — Kernel Trace
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Arabic-first interactive visualizer for Operating Systems algorithms.
 
-Currently, two official plugins are available:
+The project deliberately separates the academic algorithms from the presentation layer:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```text
+Python algorithm → JSON result → local Vite/Node bridge → React visualization
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+## Current status
+
+Implemented end-to-end:
+- **FCFS** CPU Scheduling in Python.
+- AT / BT / FT / TAT / WT.
+- Average WT and Average TAT.
+- CPU idle-time calculation and idle schedule segments.
+- Arabic RTL visualization with Ready Queue, CPU state, Gantt schedule, metrics, results, event log, and playback controls.
+
+Not yet implemented in Python:
+- SJF
+- SRTF (the UI currently contains a clearly-labelled prerecorded teaching scene only)
+- Round Robin
+- Memory Allocation algorithms
+
+## Architecture boundary
+
+### Python
+
+`python/cpu/*.py` and later `python/memory/*.py` contain only the academic algorithms and their direct outputs.
+
+Python does **not** produce UI events, animation frames, localized text, or React state.
+
+### Frontend
+
+React/TypeScript receives the schedule already decided by Python and derives presentation-only playback events from it. The frontend may visualize a decision but must not make the scheduling decision itself.
+
+### Bridge
+
+`server/python-bridge.ts` is a thin local transport layer. It starts `python/runner.py`, sends JSON through stdin, reads JSON from stdout, and returns it to the browser.
+
+## Requirements
+
+- Node.js compatible with the versions declared in `package.json`.
+- pnpm.
+- Python 3.10+ available as `python3` on macOS/Linux or `python` on Windows.
+
+If your Python executable has another name/path, set `PYTHON_BIN` before starting Vite.
+
+## Development
+
+```bash
+pnpm install
+pnpm dev
+```
+
+Open the local URL printed by Vite.
+
+The browser calls `/api/simulate`; therefore the application should be run through the Vite dev/preview server rather than opened as a static HTML file.
+
+## Verify Python directly
+
+```bash
+python -m unittest discover -s python/tests -v
+```
+
+You can also test the runner through stdin/stdout:
+
+```bash
+python python/runner.py
+```
+
+Example request:
+
+```json
+{"algorithm":"FCFS","processes":[{"id":"P1","arrival":0,"burst":4},{"id":"P2","arrival":1,"burst":3},{"id":"P3","arrival":10,"burst":2}]}
+```
+
+Expected execution schedule:
+
+```text
+P1    0 → 4
+P2    4 → 7
+IDLE  7 → 10
+P3   10 → 12
+```
+
+## Quality checks
+
+```bash
+pnpm lint
+pnpm build
+python -m unittest discover -s python/tests -v
+```
+
+## Packaging
+
+Electron is intentionally deferred. During development/presentation the Vite/Node process supplies the local Python bridge. Electron can be added later only if an installable desktop executable is required.

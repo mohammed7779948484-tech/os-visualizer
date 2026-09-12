@@ -16,7 +16,7 @@ The professor will primarily evaluate the **Python algorithm files**. The fronte
 
 This should feel like an **OS laboratory / system control room / live algorithm visualizer**, not an admin dashboard.
 
-Make algorithm events visible: process arrival, ready-queue changes, CPU dispatch, execution, preemption, completion, idle periods, RR queue rotation, memory-block checks, allocation success/failure, and remaining space.
+Make algorithm behavior visible: process arrival, ready-queue changes, CPU dispatch, execution, preemption, completion, idle periods, RR queue rotation, memory-block checks, allocation success/failure, and remaining space.
 
 Animation must explain state or causality. Decorative effects are secondary. Prefer one coherent visual system over many unrelated effects.
 
@@ -103,7 +103,7 @@ Do not let Motion and GSAP control the same animated property on the same elemen
 
 Prefer transform and opacity for frequent motion. Respect `prefers-reduced-motion`.
 
-## Python Is the Source of Truth
+## Python Is the Academic Source of Truth
 
 All Operating Systems algorithm logic belongs in Python.
 
@@ -121,11 +121,35 @@ python/
 └── runner.py
 ```
 
+### Strict algorithm boundary
+
+Files under `python/cpu/` and `python/memory/` must contain **only the academic algorithm and its direct computational outputs**.
+
+Allowed direct outputs include:
+- per-process academic results such as AT, BT, FT, TAT, and WT;
+- the execution/allocation schedule decided by the algorithm;
+- aggregate academic metrics such as averages and total CPU idle time.
+
+Python algorithm files must **not** generate:
+- UI/playback events;
+- animation frames or durations;
+- Ready Queue/CPU snapshots created only for visualization;
+- localized UI copy;
+- component state;
+- Motion/GSAP concepts;
+- presentation-specific data.
+
+The frontend may derive playback events and visual state from the schedule returned by Python, but it must never decide scheduling/allocation outcomes itself.
+
+`python/runner.py` is only a small transport adapter: parse a request, call the selected algorithm, and serialize its direct result. Do not put scheduling logic or visualization logic in the runner.
+
+`server/python-bridge.ts` is transport/security infrastructure only. It may launch Python, enforce resource limits, and forward JSON. It must not implement algorithms.
+
 Do not implement FCFS/SJF/SRTF/RR/First Fit/Best Fit/Worst Fit again in TypeScript.
 
-Keep Python algorithms independently readable and testable. Prefer straightforward academic implementations over elaborate abstractions.
+Keep each Python algorithm independently readable and testable. A professor should be able to open one algorithm file and follow the algorithm without navigating UI/event infrastructure. Prefer straightforward academic implementations over elaborate abstractions.
 
-Do not introduce FastAPI, Flask, a database, or a separate backend unless explicitly requested. Do not choose a Python↔UI bridge until the current task requires it.
+Do not introduce FastAPI, Flask, a database, or a separate backend unless explicitly requested.
 
 ## Academic Requirements
 
@@ -135,15 +159,31 @@ CPU output: Process, AT, BT, FT, TAT, WT, Average WT, Average TAT, and Total CPU
 
 Memory Allocation output: Process, Process Size, Allocated Memory Block, Block Size, Remaining Space, and Status (`Allocated` / `Not Allocated`).
 
-CPU idle intervals are real timeline events and must not be ignored.
+CPU idle intervals are part of the algorithm's direct execution schedule and must not be ignored.
 
 ## Simulation Architecture
 
-Separate calculation from playback.
+Separate **calculation** from **presentation/playback**.
 
-Python should calculate deterministic results/events quickly. Never use Python `sleep()` to drive frontend animation.
+Python calculates the algorithm immediately and returns direct scheduling/allocation facts. Never use Python `sleep()` to drive frontend animation.
 
-The frontend may replay deterministic events with play, pause, step, reset, and speed controls. Algorithm correctness must not depend on animation timing.
+React/TypeScript derives presentation-only events from those facts and owns play, pause, step, reset, speed, event-log copy, visual queue/CPU state, and animation timing.
+
+This derivation must be one-way:
+
+```text
+Python algorithm
+    ↓ direct schedule/results
+runner.py
+    ↓ JSON
+Vite/Node bridge
+    ↓ JSON
+React adapter
+    ↓ presentation events/state
+UI + Motion/GSAP
+```
+
+A React adapter may explain or animate a Python decision; it may not make that decision.
 
 Treat these as first-class product surfaces:
 - Ready queue and CPU state.
@@ -162,7 +202,9 @@ Keep components focused; co-locate feature-specific code with the feature that o
 
 Prefer derived values over duplicated state. Avoid premature global-state libraries.
 
-Use explicit domain types for processes, memory blocks, metrics, timeline segments, and simulation events. Avoid `any` unless unavoidable and explained.
+Use explicit domain types for processes, memory blocks, metrics, schedule segments, and frontend playback events. Avoid `any` unless unavoidable and explained.
+
+Client-side input validation, Arabic copy, playback-event derivation, animation state, and visualization logic belong in the frontend.
 
 As the app grows, prefer feature-oriented ownership such as `src/features/cpu`, `src/features/memory`, `src/components/ui`, `src/components/shared`, `src/components/effects`, `src/hooks`, `src/lib`, and `src/styles`. Do not create empty scaffolding prematurely.
 
@@ -188,17 +230,19 @@ Use realistic OS examples instead of placeholder-heavy final screens.
 
 Before finishing a substantial task:
 1. Inspect the result in context and check the browser console.
-2. Run `pnpm lint`.
-3. Run `pnpm build`.
-4. Verify the changed surface at common viewport sizes.
-5. Review significant motion for smoothness and reduced-motion behavior.
-6. Confirm no TypeScript copy of the Python algorithms was introduced.
-7. Summarize what changed, dependencies added, and unresolved issues.
+2. Run relevant Python algorithm tests.
+3. Run `pnpm lint`.
+4. Run `pnpm build`.
+5. Verify the changed surface at common laptop viewport sizes.
+6. Review significant motion for smoothness and reduced-motion behavior.
+7. Confirm Python algorithm files contain no UI/playback logic.
+8. Confirm TypeScript contains no duplicate scheduling/allocation algorithm.
+9. Summarize what changed, dependencies added, and unresolved issues.
 
 ## Initial Build Principle
 
 Starting from the clean foundation, do not immediately build every page.
 
-First establish one coherent visual/motion direction, then implement a small representative slice (for example the application shell plus one CPU interaction), evaluate it, and only then scale that language across CPU and Memory.
+First establish one coherent visual/motion direction, then implement a small representative slice, evaluate it, and only then scale that language across CPU and Memory.
 
 The goal is not the maximum number of effects. The goal is to make the algorithms **visible, intuitive, memorable, and technically credible**.

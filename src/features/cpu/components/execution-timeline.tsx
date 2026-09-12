@@ -1,10 +1,10 @@
 import { CircleGauge } from "lucide-react"
 import { motion, useReducedMotion } from "motion/react"
 import { getProcessColor } from "../lib/process-identity"
-import type { SimulationEvent, TimelineSegment } from "../types"
+import type { ScheduleSegment, SimulationEvent } from "../types"
 
 type ExecutionTimelineProps = {
-  timeline: TimelineSegment[]
+  schedule: ScheduleSegment[]
   event: SimulationEvent | null
   highlightedProcess: string | null
   selectedProcess: string | null
@@ -16,7 +16,7 @@ type ExecutionTimelineProps = {
 
 export function ExecutionTimeline(props: ExecutionTimelineProps) {
   const reduceMotion = useReducedMotion()
-  const totalTime = props.timeline.at(-1)?.end ?? 0
+  const totalTime = props.schedule.at(-1)?.end ?? 0
   const clock = props.event?.time ?? 0
   const startsNow = props.event?.type === "dispatch" || props.event?.type === "idle_start"
 
@@ -26,10 +26,10 @@ export function ExecutionTimeline(props: ExecutionTimelineProps) {
         <div><CircleGauge /><span><strong id="timeline-heading">الخط الزمني للتنفيذ</strong><small dir="ltr">GANTT / {totalTime}t</small></span></div>
         <span className="live-label" data-live={props.isPlaying}><i />{props.isPlaying ? "بث حي" : props.isComplete ? "مكتمل" : "متوقف"}</span>
       </div>
-      {props.timeline.length > 0 ? (
+      {props.schedule.length > 0 ? (
         <>
           <div className="gantt" dir="ltr" aria-label="مخطط جانت لتنفيذ العمليات وفترات الخمول">
-            {props.timeline.map((segment, index) => {
+            {props.schedule.map((segment, index) => {
               const visible = segment.start < clock || (segment.start === clock && startsNow)
               const processId = segment.processId
               const isIdle = segment.kind === "idle"

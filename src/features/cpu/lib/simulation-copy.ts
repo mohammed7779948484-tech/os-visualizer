@@ -5,7 +5,7 @@ export function describeEvent(event: SimulationEvent): { title: string; detail: 
 
   switch (event.type) {
     case "simulation_start":
-      return { title: "تهيئة المجدول", detail: "تم تحميل عبء العمل وأصبح المجدول جاهزًا للتنفيذ." }
+      return { title: "تهيئة العرض", detail: "استلمت الواجهة جدول التنفيذ المحسوب من بايثون وأصبحت جاهزة لإعادة عرضه." }
     case "arrival":
       return {
         title: `وصول ${processId}`,
@@ -16,12 +16,7 @@ export function describeEvent(event: SimulationEvent): { title: string; detail: 
     case "dispatch":
       return {
         title: `إرسال ${processId} إلى المعالج`,
-        detail: "اختار FCFS أقدم عملية جاهزة وفق ترتيب الوصول والإدخال.",
-      }
-    case "execute":
-      return {
-        title: `إنهاء دفعة ${processId}`,
-        detail: `استهلكت ${processId} زمن التنفيذ المطلوب بالكامل وأصبح المتبقي 0t.`,
+        detail: "يعرض المختبر قرار التنفيذ الذي أعادته خوارزمية FCFS في بايثون.",
       }
     case "complete":
       return {
@@ -31,14 +26,14 @@ export function describeEvent(event: SimulationEvent): { title: string; detail: 
     case "idle_start":
       return {
         title: "بدء خمول المعالج",
-        detail: `لا توجد عملية جاهزة. سيبقى المعالج خاملًا حتى t=${event.until}.`,
+        detail: `لا توجد عملية مجدولة للتنفيذ. تستمر فترة الخمول حتى t=${event.until}.`,
       }
     case "idle_end":
-      return { title: "انتهاء الخمول", detail: "وصلت عملية جديدة ويمكن للمجدول استئناف الإرسال." }
+      return { title: "انتهاء الخمول", detail: "انتهت فترة الخمول المحسوبة وأصبح جدول التنفيذ جاهزًا للمقطع التالي." }
     case "simulation_complete":
       return {
-        title: "اكتملت المحاكاة",
-        detail: `اكتمل تنفيذ ${event.processCount} عمليات وأصبحت النتائج النهائية جاهزة.`,
+        title: "اكتمل العرض",
+        detail: `تم عرض الجدول المحسوب لعدد ${event.processCount} عمليات بالكامل.`,
       }
   }
 }
