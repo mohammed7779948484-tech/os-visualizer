@@ -1,12 +1,9 @@
 export type Algorithm = "FCFS" | "SJF" | "SRTF" | "RR"
 
-export type ProcessId = "P1" | "P2" | "P3" | "P4"
-
 export type ProcessInput = {
-  id: ProcessId
+  id: string
   arrival: number
   burst: number
-  color: string
 }
 
 export type ProcessResult = ProcessInput & {
@@ -16,24 +13,72 @@ export type ProcessResult = ProcessInput & {
 }
 
 export type TimelineSegment = {
-  id: string
-  processId: ProcessId | "IDLE"
+  kind: "run" | "idle"
+  processId: string | null
   start: number
   end: number
 }
 
-export type DemoFrame = {
-  clock: number
-  kind: "idle" | "arrival" | "dispatch" | "execute" | "preempt" | "complete"
-  title: string
-  detail: string
-  cpu: ProcessId | null
-  queue: ProcessId[]
-  progress: number
-  visibleSegments: number
+export type RunningState = {
+  processId: string
+  executed: number
+  remaining: number
+  burst: number
+}
+
+export type SimulationState = {
+  cpu: string | null
+  readyQueue: string[]
+  completed: string[]
+  running: RunningState | null
+}
+
+export type SimulationEventType =
+  | "simulation_start"
+  | "arrival"
+  | "idle_start"
+  | "idle_end"
+  | "dispatch"
+  | "execute"
+  | "complete"
+  | "simulation_complete"
+
+export type SimulationEvent = {
+  sequence: number
+  type: SimulationEventType
+  time: number
+  state: SimulationState
+  processId?: string
+  burst?: number
+  until?: number
+  reason?: string
+  finish?: number
+  turnaround?: number
+  waiting?: number
+  executed?: number
+  remaining?: number
+  processCount?: number
+}
+
+export type SimulationResult = {
+  algorithm: "FCFS"
+  processes: ProcessResult[]
   metrics: {
     averageWaiting: number
     averageTurnaround: number
-    idle: number
+    cpuIdleTime: number
+    totalTime: number
   }
+  timeline: TimelineSegment[]
+  events: SimulationEvent[]
 }
+
+export type SimulationError = {
+  code: string
+  message: string
+  details?: Array<{ path: string; message: string }>
+}
+
+export type SimulationResponse =
+  | { ok: true; result: SimulationResult }
+  | { ok: false; error: SimulationError }
